@@ -10,3 +10,16 @@ tasks:
   create:registry: 
   - k3d registry create --port 0.0.0.0:5000 registry
   - sudo hostctl add domains k3d k3d-registry --ip 127.0.0.1
+
+  create:rbac:
+  - kubectl create serviceaccount shell-operator --namespace default
+  - kubectl create clusterrole monitor-pods --verb=get,watch,list --resource=pods
+  - kubectl create clusterrolebinding shell-operator --clusterrole=monitor-pods --serviceaccount=default:shell-operator
+
+  build-and-push:
+    dir: controller
+    cmds:
+    - docker build . --tag k3d-registry:5000/shell-operator:test
+    - docker push k3d-registry:5000/shell-operator:test
+
+  deploy: kubectl apply -f manifests

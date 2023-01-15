@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shell-operator
+spec:
+  containers:
+  - name: shell-operator
+    image: k3d-registry:5000/shell-operator:test
+    imagePullPolicy: Always
+  serviceAccountName: shell-operator
