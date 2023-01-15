@@ -1,0 +1,6 @@
+configVersion: v1
+kubernetes:
+- name: container_restarted
+  kind: Pod
+  executeHookOnEvent: ["Modified"]
+  jqFilter: ".status.containerStatuses[] | .restartCount"

@@ -1,10 +1,22 @@
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: shell-operator
 spec:
-  containers:
-  - name: shell-operator
-    image: k3d-registry:5000/shell-operator:test
-    imagePullPolicy: Always
-  serviceAccountName: shell-operator
+  selector:
+    matchLabels:
+      app: shell-operator
+  template:
+    metadata:
+      labels:
+        app: shell-operator
+    spec:
+      serviceAccountName: shell-operator
+      containers:
+      - name: shell-operator
+        image: k3d-registry:5000/shell-operator:test
+        imagePullPolicy: Always
+        env:
+        - name: GOTIFY_TOKEN
+          value: ${GOTIFY_TOKEN}
+

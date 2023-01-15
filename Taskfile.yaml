@@ -2,14 +2,27 @@ version: 3
 
 tasks:
   install:hostctl:
-  - wget -O hostctl.deb https://github.com/guumaster/hostctl/releases/download/v1.1.3/hostctl_1.1.3_linux_amd64.deb
-  - defer: rm hostctl.deb
-  - sudo dpkg -i hostctl.deb
+    cmds:
+    - wget -O hostctl.deb https://github.com/guumaster/hostctl/releases/download/v1.1.3/hostctl_1.1.3_linux_amd64.deb
+    - defer: rm hostctl.deb
+    - sudo dpkg -i hostctl.deb
+    status:
+    - command -v hostctl
 
-  create:cluster: k3d cluster create test-shell-operator --registry-use registry 
+  create:cluster: 
+    deps:
+    - create:registry
+    cmds:
+    - k3d cluster create test-shell-operator --registry-use registry 
+  
   create:registry: 
-  - k3d registry create --port 0.0.0.0:5000 registry
-  - sudo hostctl add domains k3d k3d-registry --ip 127.0.0.1
+    deps:
+    - install:hostctl
+    cmds:
+    - k3d registry create --port 0.0.0.0:5000 registry
+    - sudo hostctl add domains k3d k3d-registry --ip 127.0.0.1
+    status:
+    - k3d registry list | grep k3d-registry
 
   create:rbac:
   - kubectl create serviceaccount shell-operator --namespace default
@@ -22,4 +35,7 @@ tasks:
     - docker build . --tag k3d-registry:5000/shell-operator:test
     - docker push k3d-registry:5000/shell-operator:test
 
-  deploy: kubectl apply -f manifests
+  deploy: cat manifests/* | envsubst | kubectl apply -f -
+  restart: kubectl rollout restart deployment shell-operator
+
+  test: kubectl create deployment test --image busybox:latest -- sleep 10s
